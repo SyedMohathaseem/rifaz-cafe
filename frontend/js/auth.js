@@ -1,0 +1,425 @@
+/**
+ * Rifaz Cafe - Authentication Module
+ * Handles admin login, session management, and security
+ */
+
+const Auth = {
+  // Storage keys
+  KEYS: {
+    ADMIN: "bc_admin_credentials",
+    SESSION: "bc_admin_session",
+    CREDENTIAL_LOG: "bc_credential_log",
+  },
+
+  // Configuration
+  CONFIG: {
+    SESSION_TIMEOUT: 15 * 60 * 1000, // 15 minutes in ms
+    SALT_ROUNDS: 10,
+  },
+
+  // Activity timer
+  activityTimer: null,
+
+  // =====================================================
+  // Initialization
+  // =====================================================
+
+  /**
+   * Initialize auth - create default admin if not exists
+   */
+  async init() {
+    // Create default admin if first time
+    // Default admin creation handled by database now
+    // if (!this.getAdminCredentials()) {
+    //   await this.createDefaultAdmin();
+    // }
+
+    // Start activity tracking if logged in
+    if (this.isLoggedIn()) {
+      this.startActivityTimer();
+      this.updateLastActivity();
+    }
+  },
+
+  /**
+   * Create default admin credentials
+   */
+  // =====================================================
+  // DEMO CREDENTIALS (Backend Disconnected)
+  // Email: admin@rifaz.cafe | Password: Admin@123
+  // =====================================================
+  DEMO_EMAIL: "admin@rifaz.cafe",
+  DEMO_PASSWORD: "Admin@123",
+
+  async createDefaultAdmin() {
+    const admin = {
+      id: "adm_demo",
+      email: this.DEMO_EMAIL,
+      name: "Rifaz Admin",
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
+    };
+    localStorage.setItem(this.KEYS.ADMIN, JSON.stringify(admin));
+    console.log("Demo admin created.");
+  },
+
+  // =====================================================
+  // Password Hashing (using simple hash for localStorage)
+  // In production, use bcryptjs with proper backend
+  // =====================================================
+
+  async hashPassword(password) {
+    const salt = this.generateSalt();
+    const encoder = new TextEncoder();
+    const data = encoder.encode(salt + password);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return salt + ":" + hashHex;
+  },
+
+  async verifyPassword(password, storedHash) {
+    const [salt, hash] = storedHash.split(":");
+    const encoder = new TextEncoder();
+    const data = encoder.encode(salt + password);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return hash === hashHex;
+  },
+
+  generateSalt() {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
+  },
+
+  // =====================================================
+  // Login / Logout (Offline Demo Mode)
+  // =====================================================
+
+  /**
+   * Attempt to login using demo credentials (no backend needed)
+   * @returns {Object} { success: boolean, message: string }
+   */
+  async login(email, password) {
+    // Demo mode — check against hardcoded credentials
+    if (email === this.DEMO_EMAIL && password === this.DEMO_PASSWORD) {
+      this.createSession(email);
+      this.startActivityTimer();
+
+      // Store admin info locally
+      const admin = { id: "adm_demo", email: email, name: "Rifaz Admin" };
+      localStorage.setItem(this.KEYS.ADMIN, JSON.stringify(admin));
+
+      return { success: true, message: "Welcome to Rifaz Cafe!" };
+    }
+
+    return {
+      success: false,
+      message: "Invalid email or password. Use demo credentials.",
+    };
+  },
+
+  /**
+   * Logout current session
+   */
+  logout() {
+    this.clearSession();
+    this.stopActivityTimer();
+    window.location.href = "login.html";
+  },
+
+  /**
+   * Force logout (after credential change)
+   */
+  forceLogout(message = "Your session has expired. Please login again.") {
+    this.clearSession();
+    this.stopActivityTimer();
+    sessionStorage.setItem("bc_logout_message", message);
+    window.location.href = "login.html";
+  },
+
+  // =====================================================
+  // Session Management
+  // =====================================================
+
+  /**
+   * Create new session
+   */
+  createSession(email) {
+    const session = {
+      email: email,
+      token: this.generateSessionToken(),
+      createdAt: new Date().toISOString(),
+      lastActivity: Date.now(),
+    };
+    localStorage.setItem(this.KEYS.SESSION, JSON.stringify(session));
+  },
+
+  /**
+   * Get current session
+   */
+  getSession() {
+    try {
+      const session = localStorage.getItem(this.KEYS.SESSION);
+      return session ? JSON.parse(session) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Clear session
+   */
+  clearSession() {
+    localStorage.removeItem(this.KEYS.SESSION);
+  },
+
+  /**
+   * Check if user is logged in
+   */
+  isLoggedIn() {
+    const session = this.getSession();
+    if (!session) return false;
+
+    // Check if session expired
+    const lastActivity = session.lastActivity || 0;
+    const now = Date.now();
+
+    if (now - lastActivity > this.CONFIG.SESSION_TIMEOUT) {
+      this.clearSession();
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Update last activity timestamp
+   */
+  updateLastActivity() {
+    const session = this.getSession();
+    if (session) {
+      session.lastActivity = Date.now();
+      localStorage.setItem(this.KEYS.SESSION, JSON.stringify(session));
+    }
+  },
+
+  /**
+   * Generate session token
+   */
+  generateSessionToken() {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
+  },
+
+  // =====================================================
+  // Activity Timer (Auto-logout)
+  // =====================================================
+
+  /**
+   * Start activity timer for auto-logout
+   */
+  startActivityTimer() {
+    this.stopActivityTimer();
+
+    // Check every minute
+    this.activityTimer = setInterval(() => {
+      if (!this.isLoggedIn()) {
+        this.forceLogout("Your session has expired due to inactivity.");
+      }
+    }, 60000);
+
+    // Track user activity
+    ["click", "keypress", "scroll", "mousemove"].forEach((event) => {
+      document.addEventListener(event, () => this.updateLastActivity(), {
+        passive: true,
+      });
+    });
+  },
+
+  /**
+   * Stop activity timer
+   */
+  stopActivityTimer() {
+    if (this.activityTimer) {
+      clearInterval(this.activityTimer);
+      this.activityTimer = null;
+    }
+  },
+
+  // =====================================================
+  // Credential Management
+  // =====================================================
+
+  /**
+   * Get admin credentials
+   */
+  getAdminCredentials() {
+    try {
+      const data = localStorage.getItem(this.KEYS.ADMIN);
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Get admin email (for display)
+   */
+  getAdminEmail() {
+    const admin = this.getAdminCredentials();
+    return admin ? admin.email : "";
+  },
+
+  /**
+   * Get masked email for display
+   */
+  getMaskedEmail() {
+    const email = this.getAdminEmail();
+    if (!email) return "";
+
+    const [local, domain] = email.split("@");
+    const maskedLocal = local.substring(0, 2) + "***";
+    return maskedLocal + "@" + domain;
+  },
+
+  /**
+   * Change admin email (Demo mode)
+   */
+  async changeEmail(newEmail, currentPassword) {
+    if (currentPassword !== this.DEMO_PASSWORD) {
+      return { success: false, message: "Incorrect current password." };
+    }
+    const admin = this.getAdminCredentials() || {};
+    admin.email = newEmail;
+    localStorage.setItem(this.KEYS.ADMIN, JSON.stringify(admin));
+    this.logCredentialChange("email");
+    return { success: true, message: "Email updated (demo mode)." };
+  },
+
+  /**
+   * Change admin password (Demo mode)
+   */
+  async changePassword(currentPassword, newPassword) {
+    if (currentPassword !== this.DEMO_PASSWORD) {
+      return { success: false, message: "Incorrect current password." };
+    }
+    this.logCredentialChange("password");
+    return { success: true, message: "Password updated (demo mode)." };
+  },
+
+  /**
+   * Validate password strength
+   */
+  validatePasswordStrength(password) {
+    if (password.length < 8) {
+      return {
+        valid: false,
+        message: "Password must be at least 8 characters long.",
+      };
+    }
+    if (!/[A-Z]/.test(password)) {
+      return {
+        valid: false,
+        message: "Password must contain at least one uppercase letter.",
+      };
+    }
+    if (!/[a-z]/.test(password)) {
+      return {
+        valid: false,
+        message: "Password must contain at least one lowercase letter.",
+      };
+    }
+    if (!/[0-9]/.test(password)) {
+      return {
+        valid: false,
+        message: "Password must contain at least one number.",
+      };
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return {
+        valid: false,
+        message: "Password must contain at least one special character.",
+      };
+    }
+    return { valid: true };
+  },
+
+  /**
+   * Calculate password strength score (0-4)
+   */
+  getPasswordStrength(password) {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score++;
+
+    return Math.min(score, 4);
+  },
+
+  /**
+   * Log credential changes
+   */
+  logCredentialChange(type) {
+    const logs = this.getCredentialLogs();
+    logs.push({
+      type: type,
+      timestamp: new Date().toISOString(),
+      session: this.getSession()?.token?.substring(0, 8) || "unknown",
+    });
+
+    // Keep only last 10 logs
+    const recentLogs = logs.slice(-10);
+    localStorage.setItem(this.KEYS.CREDENTIAL_LOG, JSON.stringify(recentLogs));
+  },
+
+  /**
+   * Get credential change logs
+   */
+  getCredentialLogs() {
+    try {
+      const data = localStorage.getItem(this.KEYS.CREDENTIAL_LOG);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  // =====================================================
+  // Route Protection
+  // =====================================================
+
+  /**
+   * Check if current page requires auth and redirect if needed
+   */
+  requireAuth() {
+    if (!this.isLoggedIn()) {
+      window.location.href = "login.html";
+      return false;
+    }
+    return true;
+  },
+
+  /**
+   * Redirect to dashboard if already logged in (for login page)
+   */
+  redirectIfLoggedIn() {
+    if (this.isLoggedIn()) {
+      window.location.href = "index.html";
+      return true;
+    }
+    return false;
+  },
+};
+
+// Make Auth available globally
+window.Auth = Auth;

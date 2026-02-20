@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rifaz Cafe - Admin Panel</title>
+    <meta
+      name="description"
+      content="Admin panel for daily food subscription billing and extra item invoicing"
+    />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍛</text></svg>"
+    />
+
+    <!-- Google Fonts - Outfit + Playfair Display -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Sidebar Overlay (Mobile) -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar" id="sidebar">
+        <button class="sidebar-close" id="sidebarClose">✕</button>
+
+        <div class="sidebar-header">
+          <span class="sidebar-logo"
+            ><i data-lucide="coffee" class="brand-icon"></i
+          ></span>
+          <span class="sidebar-brand">Rifaz <span>Cafe</span></span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <ul class="nav-links">
+            <li>
+              <a
+                href="#dashboard"
+                class="nav-link active"
+                data-page="dashboard"
+              >
+                <span class="nav-link-icon"
+                  ><i data-lucide="layout-dashboard"></i
+                ></span>
+                <span class="nav-link-text">Dashboard</span>
+              </a>
+            </li>
+            <li>
+              <a href="#customers" class="nav-link" data-page="customers">
+                <span class="nav-link-icon"><i data-lucide="users"></i></span>
+                <span class="nav-link-text">Customers</span>
+              </a>
+            </li>
+            <li>
+              <a href="#menu" class="nav-link" data-page="menu">
+                <span class="nav-link-icon"
+                  ><i data-lucide="utensils-crossed"></i
+                ></span>
+                <span class="nav-link-text">Menu & Extras</span>
+              </a>
+            </li>
+            <li>
+              <a href="#extras" class="nav-link" data-page="extras">
+                <span class="nav-link-icon"
+                  ><i data-lucide="calendar-plus"></i
+                ></span>
+                <span class="nav-link-text">Daily Extras Entry</span>
+              </a>
+            </li>
+            <li>
+              <a href="#advance" class="nav-link" data-page="advance">
+                <span class="nav-link-icon"><i data-lucide="wallet"></i></span>
+                <span class="nav-link-text">Advance Payment</span>
+              </a>
+            </li>
+            <li>
+              <a href="#pending" class="nav-link" data-page="pending">
+                <span class="nav-link-icon"><i data-lucide="clock"></i></span>
+                <span class="nav-link-text">Pending Amount</span>
+              </a>
+            </li>
+            <li>
+              <a href="#invoice" class="nav-link" data-page="invoice">
+                <span class="nav-link-icon"
+                  ><i data-lucide="file-text"></i
+                ></span>
+                <span class="nav-link-text">Invoices</span>
+              </a>
+            </li>
+            <li
+              style="
+                border-top: 1px solid var(--neutral-200);
+                margin-top: var(--space-4);
+                padding-top: var(--space-4);
+              "
+            >
+              <a href="#security" class="nav-link" data-page="security">
+                <span class="nav-link-icon"><i data-lucide="shield"></i></span>
+                <span class="nav-link-text">Security Settings</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                class="nav-link"
+                onclick="
+                  Auth.logout();
+                  return false;
+                "
+              >
+                <span class="nav-link-icon"><i data-lucide="log-out"></i></span>
+                <span class="nav-link-text">Logout</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div
+            id="adminEmail"
+            style="margin-bottom: var(--space-2); font-weight: 500"
+          ></div>
+          Rifaz Cafe Services © 2026
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content" id="mainContent">
+        <header class="main-header">
+          <div class="header-content">
+            <!-- Mobile Sidebar Toggle -->
+            <button class="sidebar-toggle" id="sidebarToggle">
+              <i data-lucide="menu"></i>
+            </button>
+
+            <!-- Global Search Bar (Persistent) -->
+            <!-- Global Search Bar (Only visible on Dashboard) -->
+            <div
+              class="search-container"
+              id="searchContainer"
+              style="display: none"
+            >
+              <div class="search-bar">
+                <span class="search-icon">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  id="globalSearch"
+                  class="search-input"
+                  placeholder="Search customers, menu, extras..."
+                  autocomplete="off"
+                />
+                <button
+                  type="button"
+                  class="voice-search-btn"
+                  id="voiceSearchBtn"
+                  title="Voice Search"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                    />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="23" />
+                    <line x1="8" y1="23" x2="16" y2="23" />
+                  </svg>
+                </button>
+              </div>
+              <div id="searchResults" class="search-results"></div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Dynamic Page Content (This is what gets replaced) -->
+        <div id="pageContent">
+          <div class="loading">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Toast Container -->
+      <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/customers.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/extras.js"></script>
+    <script src="js/advance.js"></script>
+    <script src="js/pending.js"></script>
+    <script src="js/invoice.js"></script>
+    <script src="js/security.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+      // Auth check before anything else
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Initialize auth first
+        await Auth.init();
+
+        // Check if logged in, redirect to login if not
+        if (!Auth.requireAuth()) {
+          return; // Will redirect to login
+        }
+
+        // Display admin email in sidebar footer
+        const adminEmail = Auth.getAdminEmail();
+        document.getElementById("adminEmail").textContent = adminEmail;
+
+        // Initialize the app
+        App.init();
+
+        // Render Lucide Icons
+        if (window.lucide) lucide.createIcons();
+      });
+    </script>
+  </body>
+</html>
