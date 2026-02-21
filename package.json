@@ -1,0 +1,8 @@
+{
+  "name": "rifaz-cafe",
+  "version": "1.0.0",
+  "description": "Rifaz Cafe - Admin Panel for food subscription billing",
+  "scripts": {
+    "build": "cd server && npm install"
+  }
+}

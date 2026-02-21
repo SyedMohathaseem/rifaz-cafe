@@ -1,67 +1,57 @@
-# Rifaz Cafe Management
+# Rifaz Cafe - Admin Panel
 
-A premium café admin dashboard for daily food subscription billing and extra item invoicing.
+Luxury café admin panel for daily food subscription billing, customer management, and invoice generation.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 rifaz-cafe/
-├── frontend/           # Client-side application
-│   ├── index.html      # Main dashboard
-│   ├── login.html      # Admin login page
-│   ├── css/
-│   │   └── styles.css  # Luxury café theme styles
-│   └── js/
-│       ├── app.js      # Main application logic
-│       ├── auth.js     # Authentication module
-│       ├── database.js # API layer (currently disconnected)
-│       ├── customers.js
-│       ├── menu.js
-│       ├── extras.js
-│       ├── advance.js
-│       ├── pending.js
-│       ├── invoice.js
-│       ├── search.js
-│       └── security.js
-│
-├── backend/            # Server-side application (not connected yet)
-│   ├── index.js        # Express server entry
-│   ├── package.json    # Server dependencies
-│   ├── schema.sql      # Database schema
-│   ├── .env            # Environment variables (not committed)
-│   ├── config/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   └── functions/      # Netlify serverless functions
-│
-├── .gitignore
-└── README.md
+├── index.html          # Main dashboard
+├── login.html          # Admin login
+├── css/styles.css      # Theme (Outfit + Playfair Display)
+├── js/                 # Frontend modules
+│   ├── app.js          # Main app & navigation
+│   ├── auth.js         # Authentication (demo mode)
+│   ├── database.js     # LocalStorage CRUD layer
+│   ├── customers.js    # Customer management
+│   ├── menu.js         # Menu items
+│   ├── extras.js       # Daily extras
+│   ├── advance.js      # Advance payments
+│   ├── pending.js      # Pending invoices
+│   ├── invoice.js      # Invoice generation
+│   ├── security.js     # Security settings
+│   └── search.js       # Global search
+├── server/             # Backend (disconnected)
+│   ├── index.js        # Express server
+│   ├── schema.sql      # MySQL schema
+│   ├── functions/      # Netlify functions
+│   └── routes/         # API routes
+├── netlify.toml        # Netlify deployment config
+├── package.json        # Build config
+└── .gitignore
 ```
 
-## 🚀 Getting Started
+## Demo Credentials
 
-### Frontend (Styling Preview)
+| Field    | Value            |
+| -------- | ---------------- |
+| Email    | admin@rifaz.cafe |
+| Password | Admin@123        |
 
-Simply open `frontend/index.html` in a browser. The backend is currently disconnected — all API calls return empty data so you can test the UI.
+## Quick Start
 
-### Backend (When Ready)
+1. Open `index.html` in your browser (or deploy to Netlify)
+2. Login with the demo credentials above
+3. All data persists in localStorage (no backend needed)
 
-```bash
-cd backend
-npm install
-# Configure .env with your database credentials
-npm run dev
-```
+## Tech Stack
 
-## 🎨 Theme
+- **Frontend**: HTML, CSS (Outfit + Playfair Display fonts), Vanilla JS
+- **Icons**: Lucide Icons (SVG)
+- **Data**: LocalStorage-based CRUD (backend disconnected)
+- **Backend**: Express.js + MySQL (ready for reconnection)
+- **Deployment**: Netlify
 
-Luxury light brown café theme with warm latte, beige, and soft brown tones.
+## License
 
-- **Font**: DM Sans
-- **Primary**: #9C6644 (luxury brown)
-- **Background**: #FDF8F3 (warm cream)
-
-## 📝 License
-
-This project is for commercial use by Rifaz Cafe Services.
+© 2026 Rifaz Cafe Services. All rights reserved.

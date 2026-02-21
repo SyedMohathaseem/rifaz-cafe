@@ -1,11 +1,14 @@
 # Dependencies
 node_modules/
-backend/node_modules/
+server/node_modules/
+
+# Environment
+.env
+server/.env
 
 # IDE
 .vscode/
 .idea/
-.gemini/
 
 # OS
 .DS_Store
@@ -13,11 +16,7 @@ Thumbs.db
 
 # Logs
 *.log
+npm-debug.log*
 
-# Build output
-dist/
-build/
-
-# Environment variables
-.env
-**/.env
+# Build
+.netlify/

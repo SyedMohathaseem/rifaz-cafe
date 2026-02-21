@@ -1,0 +1,17 @@
+[build]
+  # Run from root, install server deps for functions
+  command = "cd server && npm install"
+  functions = "server/functions"
+  publish = "."
+
+# API Proxy — Redirect /api/* to Netlify Functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
+
+# Redirect for SPA routing (Frontend)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
